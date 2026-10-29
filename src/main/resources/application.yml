@@ -1,0 +1,115 @@
+server:
+  port: 8080
+  servlet:
+    context-path: /api
+
+spring:
+  application:
+    name: identity-platform-oss
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/identity_db
+    username: identity_admin
+    password: ${DB_PASSWORD:identity_secret}
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 5
+      idle-timeout: 300000
+      connection-timeout: 20000
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+    open-in-view: false
+
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      timeout: 2000ms
+
+  cache:
+    type: caffeine
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+
+identity:
+  jwt:
+    secret: ${JWT_SECRET:bXktc3VwZXItc2VjcmV0LWtleS1mb3ItaWRlbnRpdHktcGxhdGZvcm0tand0LXNpZ25pbmc=}
+    access-token-expiry: 900000      # 15 minutes
+    refresh-token-expiry: 604800000  # 7 days
+    issuer: identity-platform-oss
+
+  tenant:
+    header-name: X-Tenant-ID
+    default-tenant: default
+    configs:
+      - tenant-id: sky-uk
+        display-name: Sky UK
+        enabled: true
+        max-sessions: 5
+        password-policy:
+          min-length: 10
+          require-uppercase: true
+          require-special-char: true
+          max-age-days: 90
+        rate-limit:
+          requests-per-minute: 1000
+          burst-size: 100
+        allowed-origins:
+          - https://sky.com
+          - https://auth.sky.com
+
+      - tenant-id: rogers-ca
+        display-name: Rogers Canada
+        enabled: true
+        max-sessions: 3
+        password-policy:
+          min-length: 8
+          require-uppercase: true
+          require-special-char: false
+          max-age-days: 120
+        rate-limit:
+          requests-per-minute: 500
+          burst-size: 50
+        allowed-origins:
+          - https://rogers.com
+
+      - tenant-id: default
+        display-name: Default Tenant
+        enabled: true
+        max-sessions: 3
+        password-policy:
+          min-length: 8
+          require-uppercase: false
+          require-special-char: false
+          max-age-days: 180
+        rate-limit:
+          requests-per-minute: 200
+          burst-size: 20
+        allowed-origins:
+          - "*"
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus,caches
+  endpoint:
+    health:
+      show-details: when_authorized
+
+logging:
+  level:
+    com.gopesh.identity: DEBUG
+    org.springframework.security: INFO
+    org.hibernate.SQL: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] [%X{tenantId}] %-5level %logger{36} - %msg%n"

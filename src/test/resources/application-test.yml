@@ -1,0 +1,50 @@
+spring:
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
+      - org.springframework.boot.autoconfigure.data.redis.RedisRepositoriesAutoConfiguration
+
+  datasource:
+    url: jdbc:h2:mem:testdb;MODE=PostgreSQL;DB_CLOSE_DELAY=-1
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+
+  flyway:
+    enabled: false
+
+  cache:
+    type: caffeine
+
+identity:
+  jwt:
+    secret: dGVzdC1zZWNyZXQta2V5LWZvci11bml0LXRlc3RzLW11c3QtYmUtMzItYnl0ZXM=
+    access-token-expiry: 60000
+    refresh-token-expiry: 300000
+    issuer: test-identity
+
+  tenant:
+    header-name: X-Tenant-ID
+    default-tenant: test-tenant
+    configs:
+      - tenant-id: test-tenant
+        display-name: Test Tenant
+        enabled: true
+        max-sessions: 3
+        password-policy:
+          min-length: 8
+          require-uppercase: false
+          require-special-char: false
+          max-age-days: 180
+        rate-limit:
+          requests-per-minute: 1000
+          burst-size: 100
+        allowed-origins:
+          - "*"
